@@ -1,0 +1,33 @@
+pipeline {
+    agent any
+    stages {
+        stage('Build') {
+            steps {
+                echo 'Building...'
+                bat '''
+                if exist CI-CD (
+                    rmdir /s /q CI-CD
+                )
+                '''
+                bat 'git clone https://github.com/18Jn1a0423/CI-CD.git'
+                bat 'dir'
+            }
+        }
+        stage('Test') {
+            steps {
+                echo 'Testing...'
+                bat 'cd' 
+                
+                bat 'mkdir pavani_directory'
+                bat 'type nul > pavani_directory\\from_pavani.txt'
+                
+            }
+        }
+        stage('Deploy') {
+            steps {
+                echo 'Deploying...'
+                // Add your deploy steps here
+            }
+        }
+    }
+}

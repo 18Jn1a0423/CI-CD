@@ -1,33 +1,47 @@
 pipeline {
     agent any
-    stages {
-        stage('Build') {
-            steps {
-                echo 'Building...'
-                bat '''
-                if exist CI-CD (
-                    rmdir /s /q CI-CD
-                )
-                '''
-                bat 'git clone https://github.com/18Jn1a0423/CI-CD.git'
-                bat 'dir'
-            }
-        }
-        stage('Test') {
-            steps {
-                echo 'Testing...'
-                bat 'cd' 
-                
-                bat 'mkdir pavani_directory'
-                bat 'type nul > pavani_directory\\from_pavani.txt'
-                
-            }
-        }
-        stage('Deploy') {
-            steps {
-                echo 'Deploying...'
-                // Add your deploy steps here
-            }
-        }
+    tools {
+        maven 'Maven 3.9.2'
     }
+    stages {
+         stage('Git Clone') {
+             steps {
+		     checkout([$class: 'GitSCM', branches: [[name: '*/main']], userRemoteConfigs: [[url: 'https://github.com/18Jn1a0423/CICD-github-actions.git']]])
+
+             }
+         }
+         stage('Build Maven') {
+             steps {
+                 bat 'mvn clean install'
+             }
+         }
+         stage('Image Build') {
+            steps {
+                script {
+                    def imageExists = bat(script: 'docker images -q springboot-jenkins1', returnStdout: true).trim()
+                    if (imageExists == '') {
+                        bat 'docker stop springboot-jenkins1'
+                        bat 'docker rm -f springboot-jenkins1'
+                        bat 'docker rmi -f springboot-jenkin1s'
+                    }
+                    bat 'docker build -t springboot-jenkins1 .'
+                }
+            }
+        }
+        stage('Run the container') {
+            steps {
+                script {
+                    def containerExists = bat(script: 'docker ps -a -q -f name=springboot-jenkins1', returnStatus: true)
+                    if (containerExists == 0) {
+                        // bat 'docker stop springboot-jenkins'
+                        bat 'docker rm -f springboot-jenkins1'
+                    }
+                    bat 'docker run -d -p 8585:8080 --name springboot-jenkins1 springboot-jenkins1'
+                }
+            }
+        }
+
+
 }
+
+ }

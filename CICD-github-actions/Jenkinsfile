@@ -4,42 +4,47 @@ pipeline {
         maven 'Maven 3.9.2'
     }
     stages {
-         stage('Git Clone') {
-             steps {
-		     checkout([$class: 'GitSCM', branches: [[name: '*/main']], userRemoteConfigs: [[url: 'https://github.com/18Jn1a0423/CICD-github-actions.git']]])
-
-             }
-         }
-         stage('Build Maven') {
-             steps {
-                 bat 'mvn clean install'
-             }
-         }
-         stage('Image Build') {
+        stage('Git Clone') {
             steps {
-                script {
-                    def imageExists = bat(script: 'docker images -q springboot-jenkins1', returnStdout: true).trim()
-                    if (imageExists == '') {
-                        bat 'docker stop springboot-jenkins1'
-                        bat 'docker rm -f springboot-jenkins1'
-                        bat 'docker rmi -f springboot-jenkin1s'
-                    }
-                    bat 'docker build -t springboot-jenkins1 .'
+                checkout([$class: 'GitSCM', branches: [[name: '*/main']], userRemoteConfigs: [[url: 'https://github.com/18Jn1a0423/CI-CD.git']]])
+            }
+        }
+        stage('List Files') {
+            steps {
+                bat 'dir'
+            }
+        }
+        stage('Build Maven') {
+            steps {
+                dir('CICD-github-actions') {
+                    bat 'dir' // List files in the directory to confirm pom.xml presence
+                    bat 'mvn clean install'
                 }
             }
         }
-        stage('Run the container') {
+        stage('Image Build') {
             steps {
                 script {
-                    def containerExists = bat(script: 'docker ps -a -q -f name=springboot-jenkins1', returnStatus: true)
+                    def imageExists = bat(script: 'docker images -q springboot', returnStdout: true).trim()
+                    if (imageExists != '') {
+                        bat 'docker stop springboot || echo "Container not running"'
+                        bat 'docker rm -f springboot || echo "Container does not exist"'
+                        bat 'docker rmi -f springboot || echo "Image does not exist"'
+                    }
+                    bat 'docker build -t springboot .'
+                }
+            }
+        }
+        stage('Run the Container') {
+            steps {
+                script {
+                    def containerExists = bat(script: 'docker ps -a -q -f name=springboot', returnStatus: true)
                     if (containerExists == 0) {
-                        // bat 'docker stop springboot-jenkins'
-                        bat 'docker rm -f springboot-jenkins1'
+                        bat 'docker rm -f springboot || echo "Container does not exist"'
                     }
-                    bat 'docker run -d -p 8585:8080 --name springboot-jenkins1 springboot-jenkins1'
+                    bat 'docker run -d -p 8586:8080 --name springboot springboot'
                 }
             }
         }
+    }
 }
-
- }

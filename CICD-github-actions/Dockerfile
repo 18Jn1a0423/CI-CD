@@ -1,4 +1,5 @@
-FROM openjdk:8
+FROM openjdk:17-jdk-slim
+WORKDIR /app
+COPY target/CICD-github-actions.jar app.jar
 EXPOSE 8080
-COPY target/CICD-github-actions.jar CICD-github-actions.jar
-ENTRYPOINT ["java","-jar","CICD-github-actions.jar"]
+ENTRYPOINT ["java", "-jar", "app.jar"]
